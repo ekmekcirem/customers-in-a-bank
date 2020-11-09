@@ -1,0 +1,98 @@
+---
+title: "Stat 250 Project"
+author: "İrem Ekmekçi"
+output: word_document
+---
+
+
+```{r}
+library(ggplot2)
+Bank <- read.csv("~/Desktop/Bank_credit.csv")
+head(Bank)
+str(Bank)
+summary(Bank)
+Bank<-na.omit(Bank)
+head(Bank)
+```
+
+#Which property area has the highest frequency?
+
+```{r}
+Property_Area<-table(Bank$Property_Area)
+barplot(Property_Area,col = c("coral3","dodgerblue3","plum3"),main="Bar Plot of Property Areas",)
+text(Property_Area,labels = Property_Area)
+```
+
+
+#Is the average coapplicant income greater than 1500 or not?
+
+```{r}
+shapiro.test(Bank$CoapplicantIncome)
+t.test(Bank$CoapplicantIncome,alternative = "greater",mu=1500)
+library(BSDA)
+SIGN.test(Bank$CoapplicantIncome,md=1500,alt="greater")
+
+```
+
+#Is the average loan amount equal to 125$?
+```{r}
+shapiro.test(Bank$LoanAmount)
+t.test(Bank$LoanAmount,alternative = "two.sided",mu=125)
+library("BSDA")
+SIGN.test(Bank$LoanAmount,md=125,alt="two.sided")
+```
+
+
+
+#Is the average applicant income significantly higher for applicants who are graduate to not graduate?
+```{r}
+Graduate<-Bank$ApplicantIncome[Bank$Education=="Graduate"]
+Graduate
+shapiro.test(Graduate)
+NotGraduate<-Bank$ApplicantIncome[Bank$Education=="Not Graduate"]
+NotGraduate
+shapiro.test(NotGraduate)
+var.test(Graduate,NotGraduate)
+t.test(Graduate,NotGraduate,alternative="greater",conf.level = 0.95)
+wilcox.test(Graduate,NotGraduate, paired = F, alternative="greater", mu = 0)
+```
+
+
+#Is the average loan amount the same for all property areas?
+
+```{r}
+boxplot(Bank$LoanAmount~Bank$Property_Area,main="The Box Plot of Loan Amount with respect to Propert Area",xlab = "Property Areas",ylab = "Loan Amount",col=c("red","slateblue","lightcoral"))
+shapiro.test(Bank$LoanAmount[Bank$Property_Area=="Rural"])
+shapiro.test(Bank$LoanAmount[Bank$Property_Area=="Semiurban"])
+shapiro.test(Bank$LoanAmount[Bank$Property_Area=="Urban"])
+bartlett.test(LoanAmount~Property_Area,data=Bank)
+fit<-aov(LoanAmount~Property_Area,data=Bank)
+summary(fit)
+kw.test(LoanAmount~Property_Area,data=Bank)
+```
+
+
+#Is there a linear relationship between loan amount and other variables?
+```{r}
+cont.bank<-Bank[,c(7:11)]
+Corrtable<-cor(cont.bank)
+Corrtable
+library(corrplot)
+corrplot(Corrtable)
+ggplot(Bank,aes(x=ApplicantIncome,y=LoanAmount)) + geom_point(col="salmon")+ labs(title="Relationship Between Applicant Income and Loan Amount",xlab="Applicant Income",ylab="Loan Amount")+theme_bw()
+cor(Bank$ApplicantIncome,Bank$LoanAmount)
+ggplot(Bank,aes(x=CoapplicantIncome,y=LoanAmount)) + geom_point(col="slateblue")+ labs(title="Relationship Between Coapplicant Income and Loan Amount",xlab="Coapplicant Income",ylab="Loan Amount")+theme_bw()
+cor(Bank$CoapplicantIncome,Bank$LoanAmount)
+fit=lm(LoanAmount~Gender+Married+Education+Self_Employed+ApplicantIncome+CoapplicantIncome,data=Bank)
+summary(fit)
+par(mfrow=c(2,2))
+plot(fit)
+fit2=lm(LoanAmount~Married+Education+ApplicantIncome+CoapplicantIncome,data=Bank)
+summary(fit2)
+library(DAAG)
+vif(fit2)
+par(mfrow=c(2,2))
+plot(fit2)
+
+```
+
